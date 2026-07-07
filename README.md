@@ -62,6 +62,10 @@ irm https://raw.githubusercontent.com/banavasi/voice-mentor/main/install.ps1 | i
 
 Or build from source with Rust: `cargo install --git https://github.com/banavasi/voice-mentor`
 
+**Updating** = rerunning the same line — it always fetches the latest release and overwrites in
+place (`mentor --version` to check what you have). Source installs update with
+`cargo install --git … --force`.
+
 Then:
 
 ```sh

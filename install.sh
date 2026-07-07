@@ -40,11 +40,16 @@ else
 fi
 
 install -m 755 "$tmp" "$BIN_DIR/mentor"
-echo "✓ installed: $BIN_DIR/mentor"
+echo "✓ installed: $BIN_DIR/mentor ($("$BIN_DIR/mentor" --version 2>/dev/null || echo '?'))"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) echo "⚠ $BIN_DIR is not on your PATH — add it to your shell profile" ;;
 esac
+# warn if another install (e.g. an old `cargo install` copy) shadows this one
+resolved="$(command -v mentor 2>/dev/null || true)"
+if [ -n "$resolved" ] && [ "$resolved" != "$BIN_DIR/mentor" ]; then
+  echo "⚠ 'mentor' currently resolves to $resolved — remove it or fix PATH order, or updates here won't take effect"
+fi
 echo "next: run \`mentor\` — the first start offers the STT model download (~650 MB),"
 echo "and \`mentor doctor\` walks the remaining setup (claude CLI, loopback device)."
