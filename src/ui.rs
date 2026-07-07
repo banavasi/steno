@@ -77,9 +77,13 @@ fn draw_claude(f: &mut Frame, app: &mut App, area: Rect) {
             Style::new().dim()
         })
         .title_bottom(
-            Line::from(if focused { " Ctrl+T → transcript " } else { " Ctrl+T → chat " })
-                .right_aligned()
-                .dim(),
+            Line::from(if focused {
+                " Ctrl+T → transcript · Ctrl+Q quit "
+            } else {
+                " Ctrl+T → chat "
+            })
+            .right_aligned()
+            .dim(),
         );
     let inner = block.inner(area);
     match &mut app.claude {
@@ -184,7 +188,7 @@ fn draw_status(f: &mut Frame, app: &App, area: Rect) {
         ));
     }
     spans.push(Span::styled(
-        "[m]ic pause  [p]ause all  [Ctrl+T] chat  [↑↓] scroll  [q]uit+save",
+        "[m]ic pause  [p]ause all  [Ctrl+T] chat  [↑↓] scroll  [Ctrl+Q] quit+save",
         Style::new().dim(),
     ));
     f.render_widget(Paragraph::new(Line::from(spans)), area);

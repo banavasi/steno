@@ -192,9 +192,11 @@ pub async fn run(
             ev = keys.next() => {
                 match ev {
                     Some(Ok(Event::Key(k))) if k.is_press() => {
-                        let toggle = k.code == KeyCode::Char('t')
-                            && k.modifiers.contains(KeyModifiers::CONTROL);
-                        if toggle && app.claude.is_some() {
+                        let ctrl = k.modifiers.contains(KeyModifiers::CONTROL);
+                        // Ctrl+Q quits from ANY focus — never forwarded to the pane
+                        if ctrl && k.code == KeyCode::Char('q') {
+                            app.quit = true;
+                        } else if ctrl && k.code == KeyCode::Char('t') && app.claude.is_some() {
                             app.focus = match app.focus {
                                 Focus::Transcript => Focus::Claude,
                                 Focus::Claude => Focus::Transcript,

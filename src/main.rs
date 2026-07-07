@@ -175,10 +175,10 @@ fn run_meeting(session: Session, engine: &str) -> Result<()> {
         // await it — the filed note must include the last minute of the meeting
         app.summary_lines = None;
         if !app.transcript.finals.is_empty() {
-            println!("finalizing summary…");
+            println!("finalizing summary… (up to ~30s; Ctrl+C skips — the transcript is already saved)");
         }
         if let Ok(Ok(state)) =
-            tokio::time::timeout(std::time::Duration::from_secs(150), summary_task).await
+            tokio::time::timeout(std::time::Duration::from_secs(45), summary_task).await
         {
             app.summary = state;
         }

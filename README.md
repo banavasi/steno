@@ -50,11 +50,12 @@ Launch flow: pick today's calendar event (or create/skip) → recording starts.
 
 | Key | Action |
 |---|---|
+| `Ctrl+Q` | end meeting → save prompt (**works from any pane**) |
 | `m` | pause **mic** transcription (the "I'm muted in Zoom" key) |
 | `p` | pause everything |
 | `Ctrl+T` | focus/unfocus the Claude pane (all other keys pass through to it) |
 | `↑↓ PgUp PgDn End` | transcript scrollback / stick to tail |
-| `q` | end meeting → save prompt |
+| `q` | also quits, but only while the transcript pane has focus |
 
 On quit: **[Enter]** files summary+actions to `~/brain/07-meetings/` (status: held, action
 items as `- [ ] … #fu`), **[t]** includes the full transcript, **[k]** keeps it local. The
