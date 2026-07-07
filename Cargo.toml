@@ -1,10 +1,10 @@
 [package]
-name = "mentor"
-version = "0.1.0"
+name = "steno"
+version = "0.2.0"
 edition = "2024"
 description = "Bot-free live meeting transcription TUI — local streaming STT, two-channel Me/Them capture, rolling AI summary, embedded Claude Code pane"
 license = "MIT"
-repository = "https://github.com/banavasi/voice-mentor"
+repository = "https://github.com/banavasi/steno"
 
 # spikes/ are standalone crates; keep this a single-package workspace
 [workspace]

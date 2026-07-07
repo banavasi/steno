@@ -90,7 +90,7 @@ pub fn file_meeting(
     };
 
     let mut body = format!(
-        "---\ntype: meeting\ntitle: {title}\ncreated: {date}\nupdated: {date}\ndate: {date}\ntime: \"{time}\"\nattendees: []\nproject:\narea:\nsource: voice-mentor\nevent-id:{event_id}\nevent-url:\nstatus: held\nfollow-ups: {fu}\ntags: [meeting]\n---\n# {title} — {date}\n\n**Type:** {kind} · **Recorded by:** voice-mentor · **Session:** `{session_dir}`\n",
+        "---\ntype: meeting\ntitle: {title}\ncreated: {date}\nupdated: {date}\ndate: {date}\ntime: \"{time}\"\nattendees: []\nproject:\narea:\nsource: steno\nevent-id:{event_id}\nevent-url:\nstatus: held\nfollow-ups: {fu}\ntags: [meeting]\n---\n# {title} — {date}\n\n**Type:** {kind} · **Recorded by:** steno · **Session:** `{session_dir}`\n",
         title = m.title,
         date = date,
         time = m.started.format("%H:%M"),

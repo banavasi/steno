@@ -18,7 +18,7 @@ use session::{Meeting, MeetingType, Session};
 use transcript::Speaker;
 
 #[derive(Parser)]
-#[command(name = "mentor", about = "Live meeting transcription TUI", version)]
+#[command(name = "steno", about = "Live meeting transcription TUI", version)]
 struct Cli {
     #[command(subcommand)]
     cmd: Option<Cmd>,
@@ -33,7 +33,7 @@ struct Cli {
     project: Option<std::path::PathBuf>,
     /// Capture "Them" from this input device (virtual loopback, e.g.
     /// "BlackHole 2ch" on macOS or "CABLE Output" on Windows)
-    #[arg(long, global = true, env = "MENTOR_LOOPBACK_DEVICE")]
+    #[arg(long, global = true, env = "STENO_LOOPBACK_DEVICE")]
     loopback_device: Option<String>,
     /// STT engine: nemotron (default) or mock
     #[arg(long, global = true, default_value = "nemotron")]
@@ -51,7 +51,7 @@ enum Cmd {
     Meet,
     /// Reopen the most recent session
     Resume,
-    /// List past meetings, or view one: `mentor notes 2 [--transcript]`
+    /// List past meetings, or view one: `steno notes 2 [--transcript]`
     Notes {
         /// Meeting number from the list
         n: Option<usize>,
@@ -67,6 +67,15 @@ enum Cmd {
 }
 
 fn main() -> Result<()> {
+    // one-time migration from the voice-mentor days: carry sessions + the 633MB
+    // model over instead of orphaning them
+    if let Some(base) = dirs::data_dir() {
+        let old = base.join("voice-mentor");
+        let new = base.join("steno");
+        if old.is_dir() && !new.exists() {
+            let _ = std::fs::rename(&old, &new);
+        }
+    }
     let cli = Cli::parse();
     let kind = match cli.cmd {
         Some(Cmd::Doctor { json }) => return doctor::run(json),

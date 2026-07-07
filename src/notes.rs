@@ -1,4 +1,4 @@
-//! `mentor notes` — one combined list of ALL meetings: local recorded sessions
+//! `steno notes` — one combined list of ALL meetings: local recorded sessions
 //! plus every `type: meeting` note in the brain (07-meetings/ and
 //! 02-projects/*/meetings/), deduped where a session was filed. Viewing prints
 //! the brain note when one exists, else the local summary; `--transcript`
@@ -78,7 +78,7 @@ pub fn run(pick: Option<usize>, with_transcript: bool) -> Result<()> {
                 status,
             );
         }
-        println!("\nmentor notes <n> [--transcript] to view one");
+        println!("\nsteno notes <n> [--transcript] to view one");
         return Ok(());
     };
 
@@ -115,7 +115,7 @@ pub fn run(pick: Option<usize>, with_transcript: bool) -> Result<()> {
                     );
                 }
             }
-            None => println!("\n(no recorded transcript — this meeting wasn't captured by mentor)"),
+            None => println!("\n(no recorded transcript — this meeting wasn't captured by steno)"),
         }
     }
     Ok(())

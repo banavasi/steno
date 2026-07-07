@@ -1,12 +1,12 @@
-# mentor
+# steno
 
 **Live meeting transcription in your terminal — bot-free, local-first.**
 
-[![ci](https://github.com/banavasi/voice-mentor/actions/workflows/ci.yml/badge.svg)](https://github.com/banavasi/voice-mentor/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/banavasi/voice-mentor)](https://github.com/banavasi/voice-mentor/releases/latest)
+[![ci](https://github.com/banavasi/steno/actions/workflows/ci.yml/badge.svg)](https://github.com/banavasi/steno/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/banavasi/steno)](https://github.com/banavasi/steno/releases/latest)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`mentor` sits in a terminal next to your Google Meet or Zoom window and transcribes the
+`steno` sits in a terminal next to your Google Meet or Zoom window and transcribes the
 meeting **on your machine** — no bot joins the call, no audio leaves your laptop. It captures
 your **microphone** ("Me") and the **system audio** ("Them") as two separate channels, so
 speaker labels come from physics instead of a diarization model. A rolling AI summary and an
@@ -41,40 +41,40 @@ transcript — round out the three-pane TUI.
   PTY, told where the live transcript file is. Ask "what did I promise in the last
   10 minutes?" mid-meeting.
 - **Crash-safe by construction** — every finalized utterance is fsynced to an append-only
-  `transcript.jsonl`; `mentor resume` picks up after a crash or a closed terminal.
+  `transcript.jsonl`; `steno resume` picks up after a crash or a closed terminal.
 - **Meeting notes that live in plain markdown** — on quit, file summary + action items (and
   optionally the transcript) into an Obsidian-style vault (`~/brain/07-meetings/`), or keep
-  everything local. `mentor notes` browses it all afterwards.
+  everything local. `steno notes` browses it all afterwards.
 
 ## Install
 
 Linux / macOS:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/banavasi/voice-mentor/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/banavasi/steno/main/install.sh | sh
 ```
 
 Windows (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/banavasi/voice-mentor/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/banavasi/steno/main/install.ps1 | iex
 ```
 
-Or build from source with Rust: `cargo install --git https://github.com/banavasi/voice-mentor`
+Or build from source with Rust: `cargo install --git https://github.com/banavasi/steno`
 
 **Updating** = rerunning the same line — it always fetches the latest release and overwrites in
-place (`mentor --version` to check what you have). Source installs update with
+place (`steno --version` to check what you have). Source installs update with
 `cargo install --git … --force`.
 
 Then:
 
 ```sh
-mentor            # first run offers the STT model download (~650 MB, one-time, resumable)
-mentor doctor     # checks mic, loopback, model, claude — with a fix for anything red
+steno            # first run offers the STT model download (~650 MB, one-time, resumable)
+steno doctor     # checks mic, loopback, model, claude — with a fix for anything red
 ```
 
 The chat + summary panes need the [Claude Code CLI](https://claude.com/claude-code) installed
-and logged in (they ride your existing subscription — `claude` on PATH is all mentor asks).
+and logged in (they ride your existing subscription — `claude` on PATH is all steno asks).
 Without it, transcription still works fully.
 
 ## Hearing the other side ("Them")
@@ -82,24 +82,24 @@ Without it, transcription still works fully.
 | OS | Setup |
 |---|---|
 | **Linux** | none — the PipeWire/PulseAudio monitor is captured automatically |
-| **macOS** | install [BlackHole 2ch](https://existential.audio/blackhole), create a Multi-Output Device (Audio MIDI Setup → speakers + BlackHole), select it as output, run `mentor --loopback-device 'BlackHole 2ch'` |
-| **Windows** | install [VB-Cable](https://vb-audio.com/Cable), route output through it, run `mentor --loopback-device 'CABLE Output'` |
+| **macOS** | install [BlackHole 2ch](https://existential.audio/blackhole), create a Multi-Output Device (Audio MIDI Setup → speakers + BlackHole), select it as output, run `steno --loopback-device 'BlackHole 2ch'` |
+| **Windows** | install [VB-Cable](https://vb-audio.com/Cable), route output through it, run `steno --loopback-device 'CABLE Output'` |
 
-Set `MENTOR_LOOPBACK_DEVICE` once instead of passing the flag. Without loopback, mentor runs
+Set `STENO_LOOPBACK_DEVICE` once instead of passing the flag. Without loopback, steno runs
 mic-only. Native no-virtual-device capture (Core Audio process taps, WASAPI loopback) is on
 the [roadmap](#roadmap).
 
 **Wear wired headphones.** On speakers, remote voices bleed into your mic and the Me/Them
-labels degrade — mentor detects this and says so (`⚠ echo detected`) rather than pretending.
+labels degrade — steno detects this and says so (`⚠ echo detected`) rather than pretending.
 
 ## Use
 
 ```sh
-mentor standup                # or: mentor 1on1 · mentor meet · mentor
-mentor --title "arch review"  # skip the calendar picker
-mentor --project ~/code/app   # give the Claude pane your project context
-mentor resume                 # reopen the last session after a crash
-mentor notes                  # list past meetings; `mentor notes 2 --transcript` views one
+steno standup                # or: steno 1on1 · steno meet · steno
+steno --title "arch review"  # skip the calendar picker
+steno --project ~/code/app   # give the Claude pane your project context
+steno resume                 # reopen the last session after a crash
+steno notes                  # list past meetings; `steno notes 2 --transcript` views one
 ```
 
 | Key | Action |
@@ -112,7 +112,7 @@ mentor notes                  # list past meetings; `mentor notes 2 --transcript
 
 At meeting end: `Enter` files summary + action items to your vault, `t` includes the full
 transcript, `k` keeps everything local. The raw session always stays under
-`~/.local/share/voice-mentor/sessions/`.
+`~/.local/share/steno/sessions/`.
 
 Launching without `--title` opens a calendar picker when the author's `gcli` calendar CLI is
 on PATH (today's events across all Google accounts); everyone else just types a title —
@@ -149,7 +149,7 @@ the M0 risk-spike reports under [`spikes/`](spikes/).
   summary/chat panes via your own Claude login — skip the `claude` CLI (or press `k` at save
   time) and nothing leaves the machine.
 - Bot-free capture is **invisible to other participants**, and some jurisdictions treat live
-  transcription as recording. Telling people is on you; mentor won't pretend otherwise.
+  transcription as recording. Telling people is on you; steno won't pretend otherwise.
 - The mic tap keeps hearing you **while you're muted in the meeting app** — that's what the
   `m` key and the always-visible `● REC` / `◌ MIC PAUSED` indicator are for.
 - Raw audio is never persisted; the transcript is yours, in plain files.

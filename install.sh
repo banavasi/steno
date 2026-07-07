@@ -1,14 +1,14 @@
 #!/bin/sh
-# voice-mentor installer — detects OS/arch and installs the latest prebuilt
-# `mentor` binary from GitHub Releases into ~/.local/bin.
+# steno installer — detects OS/arch and installs the latest prebuilt
+# `steno` binary from GitHub Releases into ~/.local/bin.
 #
-#   curl -fsSL https://raw.githubusercontent.com/banavasi/voice-mentor/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/banavasi/steno/main/install.sh | sh
 #
-# Override the destination with MENTOR_INSTALL_DIR.
+# Override the destination with STENO_INSTALL_DIR.
 set -eu
 
-REPO="banavasi/voice-mentor"
-BIN_DIR="${MENTOR_INSTALL_DIR:-$HOME/.local/bin}"
+REPO="banavasi/steno"
+BIN_DIR="${STENO_INSTALL_DIR:-$HOME/.local/bin}"
 
 case "$(uname -s)" in
   Linux)  os="linux" ;;
@@ -20,7 +20,7 @@ case "$(uname -m)" in
   arm64|aarch64) arch="aarch64" ;;
   *) echo "unsupported arch: $(uname -m) — build from source: cargo install --git https://github.com/$REPO" >&2; exit 1 ;;
 esac
-asset="mentor-${arch}-${os}"
+asset="steno-${arch}-${os}"
 url="https://github.com/$REPO/releases/latest/download/$asset"
 
 mkdir -p "$BIN_DIR"
@@ -39,17 +39,17 @@ else
   exit 1
 fi
 
-install -m 755 "$tmp" "$BIN_DIR/mentor"
-echo "✓ installed: $BIN_DIR/mentor ($("$BIN_DIR/mentor" --version 2>/dev/null || echo '?'))"
+install -m 755 "$tmp" "$BIN_DIR/steno"
+echo "✓ installed: $BIN_DIR/steno ($("$BIN_DIR/steno" --version 2>/dev/null || echo '?'))"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) echo "⚠ $BIN_DIR is not on your PATH — add it to your shell profile" ;;
 esac
 # warn if another install (e.g. an old `cargo install` copy) shadows this one
-resolved="$(command -v mentor 2>/dev/null || true)"
-if [ -n "$resolved" ] && [ "$resolved" != "$BIN_DIR/mentor" ]; then
-  echo "⚠ 'mentor' currently resolves to $resolved — remove it or fix PATH order, or updates here won't take effect"
+resolved="$(command -v steno 2>/dev/null || true)"
+if [ -n "$resolved" ] && [ "$resolved" != "$BIN_DIR/steno" ]; then
+  echo "⚠ 'steno' currently resolves to $resolved — remove it or fix PATH order, or updates here won't take effect"
 fi
-echo "next: run \`mentor\` — the first start offers the STT model download (~650 MB),"
-echo "and \`mentor doctor\` walks the remaining setup (claude CLI, loopback device)."
+echo "next: run \`steno\` — the first start offers the STT model download (~650 MB),"
+echo "and \`steno doctor\` walks the remaining setup (claude CLI, loopback device)."

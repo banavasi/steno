@@ -49,7 +49,7 @@ pub fn start(
     cmd.args([
         "--append-system-prompt",
         &format!(
-            "You are the in-meeting assistant pane of the voice-mentor TUI. The live meeting \
+            "You are the in-meeting assistant pane of the steno TUI. The live meeting \
              transcript is appended continuously to {ws}/transcript.md ('Me' = the user, \
              'Them' = other participants) and a rolling summary to {ws}/summary.md. Always \
              re-read the transcript before answering questions about the meeting."
@@ -191,7 +191,7 @@ fn respond_to_queries(
                         let (r, c) = parser.lock().unwrap().screen().cursor_position();
                         reply(format!("\x1b[?{};{};1R", r + 1, c + 1).as_bytes());
                     }
-                    (">" | ">0", b'q') => reply(b"\x1bP>|voice-mentor 0.1\x1b\\"),
+                    (">" | ">0", b'q') => reply(b"\x1bP>|steno 0.1\x1b\\"),
                     ("?", b'u') => reply(b"\x1b[?0u"),
                     ("18", b't') => {
                         let sz = parser.lock().unwrap().screen().size();

@@ -47,7 +47,7 @@ pub struct Session {
 pub fn data_dir() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("voice-mentor")
+        .join("steno")
 }
 
 fn slugify(s: &str) -> String {
@@ -79,7 +79,7 @@ impl Session {
             dir.join("workspace/CLAUDE.md"),
             format!(
                 "# Meeting workspace — {} ({})\n\nStarted {}. This directory belongs to the \
-                 voice-mentor TUI: `transcript.md` is the LIVE meeting transcript (appended \
+                 steno TUI: `transcript.md` is the LIVE meeting transcript (appended \
                  continuously; 'Me' = the user, 'Them' = other participants) and `summary.md` \
                  is the rolling AI summary. Always re-read `transcript.md` before answering \
                  questions about what was said.\n",
@@ -136,7 +136,7 @@ impl Session {
         }
     }
 
-    /// Most recent session on disk (for `mentor resume`).
+    /// Most recent session on disk (for `steno resume`).
     pub fn latest() -> Result<Self> {
         let root = data_dir().join("sessions");
         let mut dirs: Vec<_> = fs::read_dir(&root)

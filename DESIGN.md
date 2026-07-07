@@ -1,11 +1,11 @@
-# voice-mentor — Design Doc (v1)
+# steno — Design Doc (v1)
 
 **Status: SIGNED OFF 2026-07-06; M0–M4 built & verified same day** · profile: personal
 
 > Implementation deltas from this doc (all ponytail-marked in code):
 > - Linux loopback ships as `parec @DEFAULT_MONITOR@` subprocess (server-side 16k mono), not
 >   pipewire-rs — the native API arrives with v2 per-app targeting.
-> - The claude pane's cwd is a FIXED `~/.local/share/voice-mentor/chat` dir (one trust dialog
+> - The claude pane's cwd is a FIXED `~/.local/share/steno/chat` dir (one trust dialog
 >   ever) with the per-meeting workspace granted via `--add-dir`.
 > - M0 spike findings baked in: one shared recognizer (not per-channel), `is_endpoint()+reset()`
 >   finalization, 0.8s tail flush, ~1.1s append-only partials; responder table = DA1/OSC10-12/
@@ -19,7 +19,7 @@
 >   no API key, no marginal spend, so the dollar spend-cap machinery is void (cadence guard +
 >   backoff remain).
 
-A cross-platform terminal TUI (`mentor`) that live-transcribes your meetings, keeps a rolling
+A cross-platform terminal TUI (`steno`) that live-transcribes your meetings, keeps a rolling
 AI summary, and embeds a Claude Code pane with project context. Bot-free: it captures audio on
 *your* machine, never joins the call.
 
@@ -49,7 +49,7 @@ models. "Me vs Them" is structural, not inferred.
 
 - No full multi-speaker identification (splitting voices inside "Them") — documented v2 path is
   pyannote-style ONNX segmentation on the loopback channel.
-- No calendar **auto**-start/stop — the user launches `mentor` deliberately. Kills the
+- No calendar **auto**-start/stop — the user launches `steno` deliberately. Kills the
   unattended-capture and runaway-spend class entirely.
 - No echo cancellation (AEC) — v1 ships an honest headphones gate instead (§6.3).
 - No per-app audio capture — whole-system loopback; during a meeting the meeting *is* the
@@ -62,12 +62,12 @@ models. "Me vs Them" is structural, not inferred.
 ### Command
 
 ```
-mentor standup            # meeting type: standup
-mentor 1on1               # meeting type: one-on-one
-mentor meet               # scheduled/general meeting
-mentor                    # same as `mentor meet`
-mentor resume             # reopen the last session after a crash/quit
-mentor doctor [--json]    # mic, loopback, STT benchmark, gcli, op, ANTHROPIC key, brain path
+steno standup            # meeting type: standup
+steno 1on1               # meeting type: one-on-one
+steno meet               # scheduled/general meeting
+steno                    # same as `steno meet`
+steno resume             # reopen the last session after a crash/quit
+steno doctor [--json]    # mic, loopback, STT benchmark, gcli, op, ANTHROPIC key, brain path
 ```
 
 ### Launch flow
@@ -190,7 +190,7 @@ trade accuracy and are config knobs, not defaults).
 All published RTF numbers are single-stream on idle machines; the real environment runs
 Zoom/Meet + browser + thermal throttling. Mitigations, all v1:
 
-1. `mentor doctor` benchmarks 2× concurrent Nemotron streams on this machine and reports headroom.
+1. `steno doctor` benchmarks 2× concurrent Nemotron streams on this machine and reports headroom.
 2. Runtime **backlog monitor**: if caption lag grows past a threshold, shed load — drop the mic
    channel to a smaller model, or pause a channel — and *say so* in the status bar.
    Degrade ladder: Nemotron×2 → Nemotron(them)+Kroko/small(me) → single channel.
@@ -242,7 +242,7 @@ Direct Anthropic Messages API, `claude-haiku-4-5` ($1/$5 per MTok), structured o
 - Provider is a config knob (OpenAI-compatible transport) so it *can* route to DeepSeek per your
   bulk-LLM pref; default stays Haiku — this is interactive, low-volume, quality-visible.
 - Fleet conventions: `ANTHROPIC_API_KEY` via `op read op://Mithra/...`; per-tool spend traced to
-  a dedicated Phoenix project (`voice-mentor`) via Rust OTLP/OpenInference spans — v1.x, required
+  a dedicated Phoenix project (`steno`) via Rust OTLP/OpenInference spans — v1.x, required
   by fleet convention, small.
 
 ## 8. Claude Code pane (bottom right)
@@ -295,14 +295,14 @@ own picker. Not built: direct Calendar API client, ICS fallback, CalDAV — `gcl
 ### Session dir (crash-safe by construction)
 
 ```
-~/.local/share/voice-mentor/sessions/<ISO-ts>--<slug>/
+~/.local/share/steno/sessions/<ISO-ts>--<slug>/
   meeting.json        # type, title, calendar event id, profile, project, attendees
   transcript.jsonl    # append-only finalized utterances {t, speaker, text}; periodic fsync
   summary.json        # latest summary state (stable bullet IDs)
   workspace/          # claude cwd: CLAUDE.md, transcript.md, summary.md
 ```
 
-Plain files, no SQLite. Crash/power-loss → `mentor resume` replays `transcript.jsonl`, resumes the
+Plain files, no SQLite. Crash/power-loss → `steno resume` replays `transcript.jsonl`, resumes the
 Claude session via `--session-id`, rebuilds audio streams. Suspend/resume mid-meeting → streams
 rebuilt on wake (same code path as device churn).
 
@@ -317,7 +317,7 @@ Per `~/brain/CLAUDE.md` contract (read at implementation time — its rules win 
 - **Transcript retention is a choice, not a default** (gap-check: third-party speech entering
   git-versioned permanent history): save prompt offers *summary-only to brain* (default) /
   *summary + full transcript* / *discard*. Full transcript always stays in the local session dir
-  regardless; a `mentor sessions prune` command owns local retention.
+  regardless; a `steno sessions prune` command owns local retention.
 - Atomic writes (temp + rename) — the vault is synced; partial reads corrupt.
 
 ## 11. Privacy & consent stance (explicit, per gap-check)
@@ -335,7 +335,7 @@ Per `~/brain/CLAUDE.md` contract (read at implementation time — its rules win 
 
 ## 12. Config & secrets
 
-`~/.config/voice-mentor/config.toml`: default profile, project roots, STT model + chunk-size
+`~/.config/steno/config.toml`: default profile, project roots, STT model + chunk-size
 preset + degrade ladder, summarizer provider/model/cadence/daily-cap, brain paths, keybinds.
 Secrets never in config: `ANTHROPIC_API_KEY` resolved at launch via `op read` (Mithra), env-var
 override for machines without `op`.
@@ -345,7 +345,7 @@ override for machines without `op`.
 - **Audio path**: `AudioSource` trait-injection → WAV-fixture pairs (mic.wav + loopback.wav from a
   real recorded meeting) drive capture→VAD→STT→merge→summary deterministically; golden-transcript
   assertions are keyword/similarity-based (STT isn't bit-stable). This is the CI story — runners
-  have no audio devices; real-device verification is `mentor doctor`'s job on each user machine.
+  have no audio devices; real-device verification is `steno doctor`'s job on each user machine.
 - **PTY pane**: expect-style smoke test — spawn `claude`, send a prompt, resize, assert repaint —
   on Linux + macOS CI; Windows/ConPTY gets a manual checklist until M5.
 - One integration test pinning the `claude` CLI version + stream-json protocol shape, so CLI
@@ -356,7 +356,7 @@ override for machines without `op`.
 | # | Deliverable | Proves |
 |---|---|---|
 | **M0** | Two spike binaries, ~2–4 days total: (a) `claude` inside tui-term — spawn, prompt, resize, query-responder; (b) sherpa-onnx + Nemotron int8 ×2 concurrent streams from WAV fixtures — RTF on your actual laptop | The two biggest unknowns. Go/no-go → fallbacks (alacritty_terminal or stream-json; Kroko/Moonshine) |
-| **M1** | Linux, mic-only: `mentor` → live transcript pane (cpal → VAD → Nemotron), manual title, session dir + `resume` | End-to-end pipeline + TUI skeleton |
+| **M1** | Linux, mic-only: `steno` → live transcript pane (cpal → VAD → Nemotron), manual title, session dir + `resume` | End-to-end pipeline + TUI skeleton |
 | **M2** | Second channel: PipeWire loopback → merged Me/Them transcript; headphones gate + echo detection; `m`/`p`/`● REC` | The core product claim |
 | **M3** | Summary pane (Haiku incremental, caps) + Claude pane (PTY embed) + workspace tailing + brain filing with save prompt | The full 3-pane experience |
 | **M4** | Calendar picker via `gcli`, meeting types + per-type summary templates, points-to-discuss seeding, `doctor` complete | Your described launch flow |
@@ -384,7 +384,7 @@ meeting auto-detection · Phoenix OTLP spend spans (v1.x) · TickTick action-ite
 
 ## 16. Open questions for sign-off
 
-1. **Binary/command name**: `mentor` assumed here (repo stays voice-mentor). Good, or something else?
+1. **Binary/command name**: `steno` assumed here (repo stays steno). Good, or something else?
 2. **M0 order**: both spikes in parallel, or Claude-pane spike first?
 3. **Consent posture**: is the README-documented "you own consent" stance sufficient, or do you
    want an audible/visible start chime option in v1?

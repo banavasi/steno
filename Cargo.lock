@@ -1247,30 +1247,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mentor"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "cpal",
- "crossterm",
- "dirs",
- "futures-util",
- "portable-pty",
- "ratatui",
- "rtrb",
- "serde",
- "serde_json",
- "sherpa-onnx",
- "sherpa-onnx-sys",
- "tokio",
- "tui-term",
- "uuid",
- "vt100",
-]
-
-[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2242,6 +2218,30 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "steno"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "cpal",
+ "crossterm",
+ "dirs",
+ "futures-util",
+ "portable-pty",
+ "ratatui",
+ "rtrb",
+ "serde",
+ "serde_json",
+ "sherpa-onnx",
+ "sherpa-onnx-sys",
+ "tokio",
+ "tui-term",
+ "uuid",
+ "vt100",
+]
 
 [[package]]
 name = "strsim"

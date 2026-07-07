@@ -94,7 +94,7 @@ pub fn run(json: bool) -> Result<()> {
         detail: if model_ok {
             model_dir.display().to_string()
         } else {
-            "missing — just run `mentor`; it offers the download on first start".into()
+            "missing — just run `steno`; it offers the download on first start".into()
         },
     });
 
