@@ -31,7 +31,15 @@ mentor doctor          # checks mic, loopback, model, gcli, claude — with fixe
 
 No API key needed: both the chat pane and the rolling summary run on your existing
 Claude Code login (`claude` CLI, haiku model — the summary is `claude -p` under the hood).
-The calendar picker uses the fleet's `gcli` (`gcli auth login -p <profile>` if expired).
+
+**Calendar (optional):** the picker uses the fleet's `gcli`; without it you just type meeting
+titles. On a new machine:
+
+```fish
+cargo install --git ssh://git@github.com/banavasi/agentic-os gcli
+gcli init            # config points at the 1Password items — tokens are already in Mithra,
+                     # so no re-auth needed on machines with `op` signed in
+```
 
 ### System-audio ("Them") capture per OS
 

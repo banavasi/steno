@@ -45,31 +45,37 @@ pub fn run(json: bool) -> Result<()> {
     });
 
     let gcli = cmd_version("gcli", &["--version"]);
+    let gcli_ok = gcli.is_some();
     checks.push(Check {
         name: "gcli",
-        ok: gcli.is_some(),
-        detail: gcli.unwrap_or_else(|| "not on PATH (calendar picker disabled)".into()),
+        ok: gcli_ok,
+        detail: gcli.unwrap_or_else(|| {
+            "optional (manual titles without it) — cargo install --git ssh://git@github.com/banavasi/agentic-os gcli, then `gcli init`".into()
+        }),
     });
 
-    let mut cal_details = Vec::new();
-    let mut cal_ok = false;
-    for profile in ["personal", "asu", "oneorigin"] {
-        match crate::calendar::list_today(profile) {
-            Ok(evs) => {
-                cal_ok = true; // at least one working profile
-                cal_details.push(format!("{profile}: {} event(s) today", evs.len()));
-            }
-            Err(e) => {
-                let e = e.to_string();
-                cal_details.push(format!("{profile}: {}", e.lines().next().unwrap_or("error")));
+    if gcli_ok {
+        let mut cal_details = Vec::new();
+        let mut cal_ok = false;
+        for profile in ["personal", "asu", "oneorigin"] {
+            match crate::calendar::list_today(profile) {
+                Ok(evs) => {
+                    cal_ok = true; // at least one working profile
+                    cal_details.push(format!("{profile}: {} event(s) today", evs.len()));
+                }
+                Err(e) => {
+                    let e = e.to_string();
+                    cal_details
+                        .push(format!("{profile}: {}", e.lines().next().unwrap_or("error")));
+                }
             }
         }
+        checks.push(Check {
+            name: "calendar",
+            ok: cal_ok,
+            detail: cal_details.join(" · "),
+        });
     }
-    checks.push(Check {
-        name: "calendar",
-        ok: cal_ok,
-        detail: cal_details.join(" · "),
-    });
 
     let claude = cmd_version("claude", &["--version"]);
     checks.push(Check {
