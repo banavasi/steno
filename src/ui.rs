@@ -131,11 +131,20 @@ fn draw_transcript(f: &mut Frame, app: &App, area: Rect) {
         }
     }
 
-    let block = Block::new().borders(Borders::ALL).title(format!(
+    let mut block = Block::new().borders(Borders::ALL).title(format!(
         " Transcript — {} ({}) ",
         app.session.meeting.title,
         app.session.meeting.kind.label()
     ));
+    if !app.has_loopback {
+        // this must be LOUD: a meeting recorded mic-only looks fine until you
+        // read the notes and half the conversation is missing
+        block = block.title_bottom(
+            Line::from(" ⚠ MIC-ONLY — participants are NOT captured (see README: loopback) ")
+                .centered()
+                .style(Style::new().fg(Color::Black).bg(Color::Yellow).bold()),
+        );
+    }
     let inner = block.inner(area);
     let para = Paragraph::new(lines).wrap(Wrap { trim: false });
     // sticky tail: scroll so the last line is visible unless the user scrolled up
