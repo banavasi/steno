@@ -1,11 +1,13 @@
-//! System-audio ("Them") capture on Linux via the PulseAudio layer of PipeWire:
-//! `parec -d @DEFAULT_MONITOR@` emits raw PCM on stdout, already converted
-//! server-side to 16 kHz mono f32le — no client DSP needed.
-// ponytail: subprocess parec covers whole-system loopback for v1; move to
-// pipewire-rs node targeting when v2 per-app capture lands. macOS/Windows
-// backends (cidre tap / WASAPI) slot in behind the same start() signature.
+//! System-audio ("Them") capture, per platform:
+//! - Linux: `parec -d @DEFAULT_MONITOR@` (PipeWire's PulseAudio layer) emits raw
+//!   PCM on stdout, already converted server-side to 16 kHz mono f32le.
+//! - Any OS: a VIRTUAL loopback device (BlackHole on macOS, VB-Cable on Windows)
+//!   exposes system audio as a normal cpal input — `--loopback-device <name>`.
+// ponytail: parec + virtual-device cover v1 everywhere; native backends (macOS
+// Core Audio process tap via cidre, Windows WASAPI loopback) are the M5 upgrade
+// and slot in behind the same start() signature.
 
-use crate::audio::{AudioChunk, STT_RATE};
+use crate::audio::{AudioChunk, MicHandle, STT_RATE};
 use anyhow::{Context, Result};
 use std::io::Read;
 use std::process::{Child, Command, Stdio};
@@ -15,17 +17,49 @@ use tokio::sync::mpsc;
 
 pub struct LoopbackHandle {
     pub paused: Arc<AtomicBool>,
-    child: Child,
+    keepalive: Keepalive,
+}
+
+enum Keepalive {
+    Parec(Child),
+    Device(#[allow(dead_code)] MicHandle), // stream stops when dropped
 }
 
 impl Drop for LoopbackHandle {
     fn drop(&mut self) {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        if let Keepalive::Parec(child) = &mut self.keepalive {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
     }
 }
 
-pub fn start(tx: mpsc::Sender<AudioChunk>) -> Result<LoopbackHandle> {
+/// `device`: capture a named cpal input (virtual loopback device) — works on any
+/// OS. Without it: Linux gets the PulseAudio monitor; macOS/Windows get an error
+/// explaining the virtual-device setup.
+pub fn start(device: Option<&str>, tx: mpsc::Sender<AudioChunk>) -> Result<LoopbackHandle> {
+    if let Some(name) = device {
+        let handle = crate::audio::start_input(Some(name), tx)
+            .with_context(|| format!("open loopback device '{name}'"))?;
+        return Ok(LoopbackHandle {
+            paused: handle.paused.clone(),
+            keepalive: Keepalive::Device(handle),
+        });
+    }
+    if !cfg!(target_os = "linux") {
+        let hint = if cfg!(target_os = "macos") {
+            "install BlackHole (https://existential.audio/blackhole), add it to a Multi-Output \
+             Device, then run with --loopback-device 'BlackHole 2ch'"
+        } else {
+            "install VB-Cable (https://vb-audio.com/Cable), set CABLE Input as an output, then \
+             run with --loopback-device 'CABLE Output'"
+        };
+        anyhow::bail!("no native loopback on this OS yet — {hint}");
+    }
+    start_parec(tx)
+}
+
+fn start_parec(tx: mpsc::Sender<AudioChunk>) -> Result<LoopbackHandle> {
     let mut child = Command::new("parec")
         .args([
             "-d",
@@ -74,7 +108,7 @@ pub fn start(tx: mpsc::Sender<AudioChunk>) -> Result<LoopbackHandle> {
             }
         })?;
 
-    Ok(LoopbackHandle { paused, child })
+    Ok(LoopbackHandle { paused, keepalive: Keepalive::Parec(child) })
 }
 
 /// Best-effort headphones check for the echo gate: inspect the default sink's

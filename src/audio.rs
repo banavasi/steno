@@ -17,14 +17,34 @@ pub struct MicHandle {
     _stream: cpal::Stream, // kept alive; dropping stops capture
 }
 
-/// Open the default mic, capture at its native config, downmix to mono, resample to
-/// 16 kHz, and ship ~100 ms chunks. The callback only pushes into a lock-free ring
-/// buffer; a drain thread does the DSP so the audio thread never blocks.
+/// Default mic capture.
 pub fn start_mic(tx: mpsc::Sender<AudioChunk>) -> Result<MicHandle> {
+    start_input(None, tx)
+}
+
+/// Open an input device (default mic, or one matched by name — e.g. a virtual
+/// loopback device like "BlackHole 2ch"), capture at its native config, downmix
+/// to mono, resample to 16 kHz, and ship ~100 ms chunks. The callback only pushes
+/// into a lock-free ring buffer; a drain thread does the DSP so the audio thread
+/// never blocks.
+pub fn start_input(device_name: Option<&str>, tx: mpsc::Sender<AudioChunk>) -> Result<MicHandle> {
     let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .context("no default input device (mic)")?;
+    let device = match device_name {
+        None => host
+            .default_input_device()
+            .context("no default input device (mic)")?,
+        Some(name) => {
+            let needle = name.to_lowercase();
+            host.input_devices()
+                .context("enumerate input devices")?
+                .find(|d| {
+                    d.description()
+                        .map(|desc| desc.name().to_lowercase().contains(&needle))
+                        .unwrap_or(false)
+                })
+                .with_context(|| format!("no input device matching '{name}'"))?
+        }
+    };
     let supported = device.default_input_config().context("mic config")?;
     let in_rate = supported.sample_rate() as usize;
     let channels = supported.channels() as usize;

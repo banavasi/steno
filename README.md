@@ -6,8 +6,8 @@ separate channels, transcribes both on-device with NVIDIA Nemotron streaming STT
 rolling Haiku summary, and embeds a real Claude Code (haiku) pane that knows the transcript.
 Notes file into the Obsidian brain when the meeting ends.
 
-Design & architecture: [DESIGN.md](DESIGN.md). Linux is the v1 platform (PipeWire);
-macOS/Windows are milestone M5.
+Design & architecture: [DESIGN.md](DESIGN.md). Linux is the primary platform (PipeWire);
+macOS/Windows work today via a virtual loopback device (below); native capture is milestone M5.
 
 ```
 ┌────────────────────────────┬──────────────────────────────┐
@@ -36,6 +36,18 @@ hf download csukuangfj/sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-0
 No API key needed: both the chat pane and the rolling summary run on your existing
 Claude Code login (`claude` CLI, haiku model — the summary is `claude -p` under the hood).
 The calendar picker uses the fleet's `gcli` (`gcli auth login -p <profile>` if expired).
+
+### System-audio ("Them") capture per OS
+
+| OS | Setup |
+|---|---|
+| **Linux** | Nothing — PipeWire/PulseAudio monitor is captured automatically (`parec`). |
+| **macOS** | Install [BlackHole 2ch](https://existential.audio/blackhole), create a **Multi-Output Device** (Audio MIDI Setup → your speakers + BlackHole) and select it as output, then run `mentor --loopback-device 'BlackHole 2ch'`. |
+| **Windows** | Install [VB-Cable](https://vb-audio.com/Cable), set *CABLE Input* as default output (listen through your real device via its monitoring tab), then run `mentor --loopback-device 'CABLE Output'`. |
+
+Set it once via the env var `MENTOR_LOOPBACK_DEVICE` instead of the flag. Without any of
+this, mentor still runs mic-only ("Me" channel only). Native capture without a virtual
+device (Core Audio process taps / WASAPI loopback) is the M5 milestone in DESIGN.md.
 
 ## Use
 

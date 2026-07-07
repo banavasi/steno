@@ -31,6 +31,10 @@ struct Cli {
     /// Project directory the meeting is about (granted to the claude pane)
     #[arg(long, global = true)]
     project: Option<std::path::PathBuf>,
+    /// Capture "Them" from this input device (virtual loopback, e.g.
+    /// "BlackHole 2ch" on macOS or "CABLE Output" on Windows)
+    #[arg(long, global = true, env = "MENTOR_LOOPBACK_DEVICE")]
+    loopback_device: Option<String>,
     /// STT engine: nemotron (default) or mock
     #[arg(long, global = true, default_value = "nemotron")]
     engine: String,
@@ -67,7 +71,9 @@ fn main() -> Result<()> {
     let kind = match cli.cmd {
         Some(Cmd::Doctor { json }) => return doctor::run(json),
         Some(Cmd::Notes { n, transcript }) => return notes::run(n, transcript),
-        Some(Cmd::Resume) => return run_meeting(Session::latest()?, &cli.engine),
+        Some(Cmd::Resume) => {
+            return run_meeting(Session::latest()?, &cli.engine, cli.loopback_device.as_deref());
+        }
         Some(Cmd::Standup) => MeetingType::Standup,
         Some(Cmd::OneOnOne) => MeetingType::OneOnOne,
         Some(Cmd::Meet) | None => MeetingType::Meet,
@@ -86,7 +92,7 @@ fn main() -> Result<()> {
         project_dir: cli.project.clone().map(|p| p.canonicalize().unwrap_or(p)),
         filed_to: None,
     })?;
-    run_meeting(session, &cli.engine)
+    run_meeting(session, &cli.engine, cli.loopback_device.as_deref())
 }
 
 /// One factory per channel; nemotron shares a single recognizer between them.
@@ -109,7 +115,7 @@ fn engine_factories(name: &str) -> Result<(app::EngineFactory, app::EngineFactor
     }
 }
 
-fn run_meeting(session: Session, engine: &str) -> Result<()> {
+fn run_meeting(session: Session, engine: &str, loopback_device: Option<&str>) -> Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
         let (events_tx, events_rx) = tokio::sync::mpsc::channel(256);
@@ -124,7 +130,7 @@ fn run_meeting(session: Session, engine: &str) -> Result<()> {
         app::spawn_stt_pipeline(me_factory, Speaker::Me, mic_rx, events_tx.clone());
 
         // "Them" channel: whole-system loopback. Meeting audio IS the system audio.
-        let loopback = match loopback::start(sys_tx) {
+        let loopback = match loopback::start(loopback_device, sys_tx) {
             Ok(h) => {
                 app::spawn_stt_pipeline(them_factory, Speaker::Them, sys_rx, events_tx);
                 Some(h)
