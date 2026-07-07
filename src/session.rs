@@ -32,6 +32,9 @@ pub struct Meeting {
     pub calendar_event_id: Option<String>,
     #[serde(default)]
     pub project_dir: Option<PathBuf>,
+    /// Brain note path once filed (set at save time).
+    #[serde(default)]
+    pub filed_to: Option<PathBuf>,
 }
 
 /// On-disk session: crash-safe by construction (append-only jsonl + small json files).
@@ -94,6 +97,32 @@ impl Session {
 
     pub fn workspace(&self) -> PathBuf {
         self.dir.join("workspace")
+    }
+
+    /// Rewrite meeting.json (e.g. after recording where the note was filed).
+    pub fn save_meeting(&self) -> Result<()> {
+        let tmp = self.dir.join("meeting.json.tmp");
+        fs::write(&tmp, serde_json::to_vec_pretty(&self.meeting)?)?;
+        fs::rename(&tmp, self.dir.join("meeting.json"))?;
+        Ok(())
+    }
+
+    /// All sessions on disk, newest first.
+    pub fn list_all() -> Vec<(PathBuf, Meeting)> {
+        let root = data_dir().join("sessions");
+        let Ok(entries) = fs::read_dir(&root) else {
+            return Vec::new();
+        };
+        let mut all: Vec<(PathBuf, Meeting)> = entries
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter_map(|p| {
+                let m: Meeting = serde_json::from_slice(&fs::read(p.join("meeting.json")).ok()?).ok()?;
+                Some((p, m))
+            })
+            .collect();
+        all.sort_by(|a, b| b.0.cmp(&a.0));
+        all
     }
 
     /// Human-readable live transcript for the claude pane to read.

@@ -5,6 +5,7 @@ mod calendar;
 mod claude_pane;
 mod doctor;
 mod loopback;
+mod notes;
 mod session;
 mod stt;
 mod summary;
@@ -46,6 +47,14 @@ enum Cmd {
     Meet,
     /// Reopen the most recent session
     Resume,
+    /// List past meetings, or view one: `mentor notes 2 [--transcript]`
+    Notes {
+        /// Meeting number from the list
+        n: Option<usize>,
+        /// Include the full transcript
+        #[arg(long)]
+        transcript: bool,
+    },
     /// Health checks: audio, models, gcli, keys
     Doctor {
         #[arg(long)]
@@ -57,6 +66,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     let kind = match cli.cmd {
         Some(Cmd::Doctor { json }) => return doctor::run(json),
+        Some(Cmd::Notes { n, transcript }) => return notes::run(n, transcript),
         Some(Cmd::Resume) => return run_meeting(Session::latest()?, &cli.engine),
         Some(Cmd::Standup) => MeetingType::Standup,
         Some(Cmd::OneOnOne) => MeetingType::OneOnOne,
@@ -74,6 +84,7 @@ fn main() -> Result<()> {
         started,
         calendar_event_id: None,
         project_dir: cli.project.clone().map(|p| p.canonicalize().unwrap_or(p)),
+        filed_to: None,
     })?;
     run_meeting(session, &cli.engine)
 }
@@ -195,7 +206,11 @@ fn run_meeting(session: Session, engine: &str) -> Result<()> {
                         &app.transcript.finals,
                         with_transcript,
                     ) {
-                        Ok(path) => println!("filed to brain: {}", path.display()),
+                        Ok(path) => {
+                            println!("filed to brain: {}", path.display());
+                            app.session.meeting.filed_to = Some(path);
+                            let _ = app.session.save_meeting();
+                        }
                         Err(e) => println!("brain filing failed ({e}); session dir keeps everything."),
                     }
                 }
