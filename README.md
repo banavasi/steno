@@ -21,10 +21,24 @@ macOS/Windows work today via a virtual loopback device (below); native capture i
 
 ## Install
 
-One command from any machine with Rust (`rustup.rs`) and access to this repo:
+**Prebuilt binary** (Linux/macOS; needs the `gh` CLI while this repo is private — becomes a
+plain `curl -fsSL …/install.sh | sh` if it ever goes public):
+
+```fish
+gh api repos/banavasi/voice-mentor/contents/install.sh -H "Accept: application/vnd.github.raw" | sh
+```
+
+Windows (PowerShell): `gh api repos/banavasi/voice-mentor/contents/install.ps1 -H "Accept: application/vnd.github.raw" | iex`
+
+**Or build from source** (any machine with Rust from `rustup.rs`):
 
 ```fish
 cargo install --git https://github.com/banavasi/voice-mentor   # or: cargo install --path .
+```
+
+Then:
+
+```fish
 mentor                 # first run offers the STT model download (~650 MB, one-time, resumable)
 mentor doctor          # checks mic, loopback, model, gcli, claude — with fixes for anything red
 ```
