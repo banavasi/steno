@@ -99,6 +99,7 @@ fn main() -> Result<()> {
 fn engine_factories(name: &str) -> Result<(app::EngineFactory, app::EngineFactory)> {
     match name {
         "nemotron" => {
+            stt::nemotron::ensure_model()?;
             eprintln!("loading Nemotron model (~2s)…");
             let rec = stt::nemotron::load_recognizer()?;
             let rec2 = rec.clone();

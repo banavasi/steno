@@ -21,16 +21,12 @@ macOS/Windows work today via a virtual loopback device (below); native capture i
 
 ## Install
 
-```fish
-cargo install --path .
-mentor doctor          # checks mic, loopback, model, gcli, op, claude
-```
-
-First run needs the STT model (~650 MB, one-time):
+One command from any machine with Rust (`rustup.rs`) and access to this repo:
 
 ```fish
-hf download csukuangfj/sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14 \
-  --local-dir ~/.local/share/voice-mentor/models/sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14
+cargo install --git https://github.com/banavasi/voice-mentor   # or: cargo install --path .
+mentor                 # first run offers the STT model download (~650 MB, one-time, resumable)
+mentor doctor          # checks mic, loopback, model, gcli, claude — with fixes for anything red
 ```
 
 No API key needed: both the chat pane and the rolling summary run on your existing

@@ -88,11 +88,7 @@ pub fn run(json: bool) -> Result<()> {
         detail: if model_ok {
             model_dir.display().to_string()
         } else {
-            format!(
-                "missing — hf download csukuangfj/{} --local-dir {}",
-                crate::stt::nemotron::MODEL_NAME,
-                model_dir.display()
-            )
+            "missing — just run `mentor`; it offers the download on first start".into()
         },
     });
 

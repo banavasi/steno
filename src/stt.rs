@@ -30,7 +30,9 @@ pub mod nemotron {
     pub const MODEL_NAME: &str = "sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14";
     pub const MODEL_REPO: &str =
         "https://huggingface.co/csukuangfj/sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14";
-    // pinned revision: f13b0c6a48186fdd9fdd8d203b9527b0b709b09f
+    const MODEL_REV: &str = "f13b0c6a48186fdd9fdd8d203b9527b0b709b09f"; // pinned
+    const MODEL_FILES: [&str; 4] =
+        ["encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"];
     const RATE: i32 = 16_000;
 
     pub fn model_dir() -> PathBuf {
@@ -38,9 +40,51 @@ pub mod nemotron {
     }
 
     pub fn model_present(dir: &Path) -> bool {
-        ["encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"]
-            .iter()
-            .all(|f| dir.join(f).exists())
+        MODEL_FILES.iter().all(|f| dir.join(f).exists())
+    }
+
+    /// First-run bootstrap: if the model is missing, offer to download it
+    /// (pinned revision, resumable `curl` — present on Linux/macOS/Win10+).
+    /// Runs pre-TUI, so plain stdin/stderr prompting is fine.
+    pub fn ensure_model() -> Result<()> {
+        let dir = model_dir();
+        if model_present(&dir) {
+            return Ok(());
+        }
+        eprintln!(
+            "Nemotron STT model missing at {} (~650 MB, one-time download).",
+            dir.display()
+        );
+        eprint!("download it now from HuggingFace? [Y/n] ");
+        let mut ans = String::new();
+        std::io::stdin().read_line(&mut ans).ok();
+        if ans.trim().eq_ignore_ascii_case("n") {
+            anyhow::bail!(
+                "model required. Fetch it manually with:\n  hf download csukuangfj/{MODEL_NAME} --local-dir {}",
+                dir.display()
+            );
+        }
+        std::fs::create_dir_all(&dir)?;
+        for file in MODEL_FILES {
+            let dest = dir.join(file);
+            if dest.exists() {
+                continue;
+            }
+            let url = format!("{MODEL_REPO}/resolve/{MODEL_REV}/{file}");
+            eprintln!("↓ {file}");
+            let part = dir.join(format!("{file}.part"));
+            let status = std::process::Command::new("curl")
+                .args(["-L", "--fail", "--retry", "3", "-C", "-", "--progress-bar", "-o"])
+                .arg(&part)
+                .arg(&url)
+                .status()
+                .context("run curl (is it installed?)")?;
+            anyhow::ensure!(status.success(), "download failed for {file} — rerun to resume");
+            std::fs::rename(&part, &dest)?;
+        }
+        anyhow::ensure!(model_present(&dir), "download finished but files are missing");
+        eprintln!("model ready.");
+        Ok(())
     }
 
     /// Load the shared recognizer (~1.8 s, ~0.9 GiB). Call once per app.
