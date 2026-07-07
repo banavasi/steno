@@ -58,6 +58,23 @@ impl CalEvent {
 }
 
 fn gcli(args: &[&str]) -> Result<String> {
+    match gcli_raw(args) {
+        // older gcli builds had --json as a root-only flag (not global=true), so it
+        // must precede the subcommand: `gcli --json cal list …`. Retry reordered.
+        Err(e) if e.to_string().contains("unexpected argument '--json'") => {
+            let mut reordered = vec!["--json"];
+            reordered.extend(args.iter().copied().filter(|a| *a != "--json"));
+            gcli_raw(&reordered).map_err(|e2| {
+                anyhow::anyhow!(
+                    "{e2} — your gcli looks outdated; update it:\n  cargo install --git ssh://git@github.com/banavasi/agentic-os gcli --force"
+                )
+            })
+        }
+        other => other,
+    }
+}
+
+fn gcli_raw(args: &[&str]) -> Result<String> {
     let out = Command::new("gcli").args(args).output().context("run gcli")?;
     let stdout = String::from_utf8_lossy(&out.stdout).to_string();
     // gcli's error envelope: {"error":{"message":...}} on non-zero exit
