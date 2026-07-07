@@ -22,6 +22,41 @@ pub fn start_mic(tx: mpsc::Sender<AudioChunk>) -> Result<MicHandle> {
     start_input(None, tx)
 }
 
+/// `steno devices` — the names `--loopback-device` matches against (substring,
+/// case-insensitive). Loopback-looking devices are flagged.
+pub fn list_devices() -> Result<()> {
+    let host = cpal::default_host();
+    let default = host
+        .default_input_device()
+        .and_then(|d| d.description().ok())
+        .map(|d| d.name().to_string());
+    let mut seen = std::collections::HashSet::new();
+    for device in host.input_devices().context("enumerate input devices")? {
+        let Ok(desc) = device.description() else { continue };
+        let name = desc.name();
+        if !seen.insert(name.to_string()) {
+            continue;
+        }
+        let lower = name.to_lowercase();
+        let mut tags = Vec::new();
+        if Some(name.to_string()) == default {
+            tags.push("default mic");
+        }
+        if ["blackhole", "cable", "monitor", "loopback", "soundflower"]
+            .iter()
+            .any(|k| lower.contains(k))
+        {
+            tags.push("← loopback candidate");
+        }
+        println!(
+            "  {name}{}",
+            if tags.is_empty() { String::new() } else { format!("   ({})", tags.join(", ")) }
+        );
+    }
+    println!("\nuse with: steno --loopback-device '<name or substring>'");
+    Ok(())
+}
+
 /// Open an input device (default mic, or one matched by name — e.g. a virtual
 /// loopback device like "BlackHole 2ch"), capture at its native config, downmix
 /// to mono, resample to 16 kHz, and ship ~100 ms chunks. The callback only pushes

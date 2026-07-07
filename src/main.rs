@@ -51,6 +51,8 @@ enum Cmd {
     Meet,
     /// Reopen the most recent session
     Resume,
+    /// List audio input devices (find your loopback device's name)
+    Devices,
     /// List past meetings, or view one: `steno notes 2 [--transcript]`
     Notes {
         /// Meeting number from the list
@@ -79,6 +81,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     let kind = match cli.cmd {
         Some(Cmd::Doctor { json }) => return doctor::run(json),
+        Some(Cmd::Devices) => return audio::list_devices(),
         Some(Cmd::Notes { n, transcript }) => return notes::run(n, transcript),
         Some(Cmd::Resume) => {
             return run_meeting(Session::latest()?, &cli.engine, cli.loopback_device.as_deref());
