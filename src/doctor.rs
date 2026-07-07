@@ -51,14 +51,24 @@ pub fn run(json: bool) -> Result<()> {
         detail: gcli.unwrap_or_else(|| "not on PATH (calendar picker disabled)".into()),
     });
 
-    let cal = crate::calendar::list_today("personal");
+    let mut cal_details = Vec::new();
+    let mut cal_ok = false;
+    for profile in ["personal", "asu", "oneorigin"] {
+        match crate::calendar::list_today(profile) {
+            Ok(evs) => {
+                cal_ok = true; // at least one working profile
+                cal_details.push(format!("{profile}: {} event(s) today", evs.len()));
+            }
+            Err(e) => {
+                let e = e.to_string();
+                cal_details.push(format!("{profile}: {}", e.lines().next().unwrap_or("error")));
+            }
+        }
+    }
     checks.push(Check {
         name: "calendar",
-        ok: cal.is_ok(),
-        detail: match cal {
-            Ok(evs) => format!("{} event(s) today on 'personal'", evs.len()),
-            Err(e) => format!("{e}"),
-        },
+        ok: cal_ok,
+        detail: cal_details.join(" · "),
     });
 
     let claude = cmd_version("claude", &["--version"]);

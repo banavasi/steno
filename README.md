@@ -48,7 +48,9 @@ mentor notes                   # list past meetings
 mentor notes 2 --transcript    # view one (brain note if filed, else local summary)
 ```
 
-Launch flow: pick today's calendar event (or create/skip) → recording starts.
+Launch flow: pick from **today's events across all your gcli profiles** (fetched
+concurrently, merged by time, expired profiles warned inline) — or create one, or just type a
+title — then recording starts. `--profile <name>` restricts the picker to one account.
 
 | Key | Action |
 |---|---|

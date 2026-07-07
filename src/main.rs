@@ -25,9 +25,9 @@ struct Cli {
     /// Meeting title (skips the calendar picker)
     #[arg(long, global = true)]
     title: Option<String>,
-    /// Google profile for the calendar picker
-    #[arg(long, global = true, default_value = "personal")]
-    profile: String,
+    /// Restrict the calendar picker to one Google profile (default: all)
+    #[arg(long, global = true)]
+    profile: Option<String>,
     /// Project directory the meeting is about (granted to the claude pane)
     #[arg(long, global = true)]
     project: Option<std::path::PathBuf>,
@@ -77,7 +77,7 @@ fn main() -> Result<()> {
     let title = cli
         .title
         .clone()
-        .unwrap_or_else(|| calendar::pick_title(&cli.profile, &default_title));
+        .unwrap_or_else(|| calendar::pick_title(cli.profile.as_deref(), &default_title));
     let session = Session::create(Meeting {
         title,
         kind,
