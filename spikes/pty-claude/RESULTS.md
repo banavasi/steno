@@ -104,7 +104,7 @@ not needed.
 │                      ▝▜█████▛▘                     │ Added a "Dynamic workflow size" setting in `/config` for contr… │
 │                        ▘▘ ▝▝                       │ Added `workflow.run_id` and `workflow.name` OpenTelemetry attr… │
 │    Haiku 4.5 · Claude Max ·                        │ Fixed a crash in the inline Ctrl+R history search when accepti… │
-│    shashank.v.shandilya@gmail.com's Organization   │ /release-notes for more                                         │
+│    <redacted>@example.com's Organization   │ /release-notes for more                                         │
 │         ~/workspaces/personal/voice-mentor         │                                                                 │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
