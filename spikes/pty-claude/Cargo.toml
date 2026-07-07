@@ -1,0 +1,11 @@
+[workspace]
+
+[package]
+name = "pty-claude"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.103"
+portable-pty = "0.9"
+vt100 = "0.16"

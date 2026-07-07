@@ -1,0 +1,16 @@
+[package]
+name = "stt-bench"
+version = "0.1.0"
+edition = "2024"
+
+# Standalone spike crate — do not fold into any parent workspace.
+[workspace]
+
+[dependencies]
+# Official first-party Rust bindings for sherpa-onnx (k2-fsa/sherpa-onnx).
+# Pinned exactly; sys crate pinned too so the prebuilt-lib download is deterministic.
+sherpa-onnx = "=1.13.3"
+sherpa-onnx-sys = "=1.13.3"
+
+[profile.release]
+debug = false
