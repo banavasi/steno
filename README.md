@@ -44,6 +44,8 @@ mentor standup                 # or: mentor 1on1 · mentor meet · mentor
 mentor --title "arch review"   # skip the calendar picker
 mentor --project ~/workspaces/personal/agentic-os   # give the claude pane the project
 mentor resume                  # reopen the last session after a crash
+mentor notes                   # list past meetings
+mentor notes 2 --transcript    # view one (brain note if filed, else local summary)
 ```
 
 Launch flow: pick today's calendar event (or create/skip) → recording starts.
